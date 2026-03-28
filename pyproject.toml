@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "constrained-minds"
+version = "0.1.0"
+description = "Cross-corpus universal feature analysis via sparse autoencoders"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.2.0",
+    "transformers>=4.40.0",
+    "datasets>=2.18.0",
+    "sae-lens>=4.0.0",
+    "transformer-lens>=1.17.0",
+    "umap-learn>=0.5.6",
+    "scikit-learn>=1.4.0",
+    "matplotlib>=3.8.0",
+    "seaborn>=0.13.0",
+    "plotly>=5.20.0",
+    "numpy>=1.26.0",
+    "pandas>=2.2.0",
+    "tqdm>=4.66.0",
+    "einops>=0.7.0",
+    "jaxtyping>=0.2.28",
+    "anthropic>=0.25.0",
+    "jupyter>=1.0.0",
+    "ipywidgets>=8.1.0",
+    "llama-cpp-python>=0.2.57",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "black>=24.0.0",
+    "ruff>=0.3.0",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["constrained_minds*"]

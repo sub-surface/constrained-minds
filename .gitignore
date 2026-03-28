@@ -1,0 +1,31 @@
+# Activations and large data files
+data/activations/
+results/checkpoints/
+*.pt
+*.safetensors
+*.gguf
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Environment
+.env
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Results (figures are committed, large intermediates are not)
+results/checkpoints/
