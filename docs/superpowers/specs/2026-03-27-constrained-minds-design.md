@@ -108,14 +108,14 @@ constrained-minds/
 
 ### The Five Layers
 
-**`models/`** — A unified `ModelWrapper` interface normalising across all 8 architectures. Every model exposes identical methods:
+**`models/`** — A unified `ModelWrapper` interface normalising across all 5 architectures. Every model exposes identical methods:
 - `encode(text: str) → token_ids`
 - `forward(token_ids, layer: int) → activations`
 - `decode_logits(hidden_state) → logit_distribution`
 - `get_layer_count() → int`
 - `get_d_model() → int`
 
-Sub-classes: `NanochatWrapper` (handles `.pt` loading for M1), `HuggingFaceWrapper` (M2–M7), `GGUFWrapper` (local LM Studio models via `llama-cpp-python`).
+Sub-classes: `NanochatWrapper` (handles `.pt` loading for M1), `HuggingFaceWrapper` (M2–M5).
 
 **`activations/`** — Extraction and caching. Runs all models over the shared neutral corpus, saves per-model per-layer activation tensors to disk. Handles:
 - Normalisation to `√(d_model)` mean norm (crosscoder convention)
@@ -217,12 +217,12 @@ For model i with activations A_i ∈ R^(d_model_i):
 - Function: `viz.logit_lens_grid(traces: dict[model_id, LayerTrace]) → Figure`
 
 **Figure 2 — Concept Neighbourhood Comparison**
-Structured table: 40 seed concepts × 5 models. Each cell: top-3 nearest neighbours. Colour-coded by semantic field (theological, scientific, literary, medical, formal/code). Reveals "science" → {Providence, natural philosophy} in M1 vs. {clinical trial, dosage} in M3 vs. {function, module, import} in M4.
+Structured table: 38 seed concepts × 5 models. Each cell: top-3 nearest neighbours. Colour-coded by semantic field (theological, scientific, literary, medical, formal/code). Reveals "science" → {Providence, natural philosophy} in M1 vs. {clinical trial, dosage} in M3 vs. {function, module, import} in M4.
 - Seed concepts include: *science, nature, feeling, character, progress, empire, mind, body, truth, reason, evolution, hysteria, machine, virtue, moral, soul, knowledge, death, love, time, power, order, system, law, will, form, matter, spirit, voice, memory, desire, labour, class, race, God, natural, civil, common, free, human*
 - Function: `viz.concept_neighbourhood_table(neighbours: dict[model_id, dict[concept, list[str]]]) → Figure`
 
 **Figure 3 — UMAP Concept Map**
-2D UMAP of 40×5=200 concept embeddings. Colour = model, shape = concept. Tight cross-model clustering → Platonic convergence; scatter → corpus-specific encoding.
+2D UMAP of 38×5=190 concept embeddings. Colour = model, shape = concept. Tight cross-model clustering → Platonic convergence; scatter → corpus-specific encoding.
 - Function: `viz.umap_concept_map(embeddings: dict[model_id, dict[concept, ndarray]]) → Figure`
 
 ### 5.2 Universal Feature Discovery
@@ -256,11 +256,11 @@ Three Venn diagrams for pairs M1↔M5 (historical vs. general), M2↔M1 (synthet
 ### 5.4 Geometric Analysis
 
 **Figure 10 — Concept Geometry Comparison**
-Side-by-side 3D PCA plots for emotional-states simplex (joy, grief, anger, fear, love) in M1, M7, M2. Tests whether simplex vertex positions/angles are consistent across models under rotation. Platonic prediction: same shape, different orientation.
+Side-by-side 3D PCA plots for emotional-states simplex (joy, grief, anger, fear, love) in M1, M5, M2. Tests whether simplex vertex positions/angles are consistent across models under rotation. Platonic prediction: same shape, different orientation.
 - Function: `viz.simplex_comparison(concept_embeddings: dict[model_id, ndarray], concepts: list[str]) → Figure`
 
 **Figure 11 — Hierarchy Orthogonality Scores**
-Bar chart: cosine similarity between parent and child concept directions for 10 hierarchical pairs (e.g. animal→mammal→dog, emotion→grief, knowledge→science) across all 8 models. Park et al. prediction: near zero. Deviations quantify idiosyncratic geometry.
+Bar chart: cosine similarity between parent and child concept directions for 10 hierarchical pairs (e.g. animal→mammal→dog, emotion→grief, knowledge→science) across all 5 models. Park et al. prediction: near zero. Deviations quantify idiosyncratic geometry.
 - Function: `viz.orthogonality_bars(scores: dict[model_id, dict[pair, float]]) → Figure`
 
 ### 5.5 Causal Verification
@@ -282,7 +282,7 @@ Distribution of domain register scores across the shared corpus for all 5 models
 
 ## 6. Seed Concept Vocabulary
 
-40 words chosen for historically variable meanings or cultural salience across training corpora. Grouped by expected cross-model divergence:
+38 words chosen for historically variable meanings or cultural salience across training corpora. Grouped by expected cross-model divergence:
 
 **High divergence expected** (meanings shifted substantially across eras/domains):
 `science, nature, evolution, hysteria, progress, empire, machine, constitution, character, feeling`
