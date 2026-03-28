@@ -380,7 +380,7 @@ def test_hf_wrapper_loads_pythia():
     )
     assert model.get_layer_count() == 24
     assert model.get_d_model() == 1024
-    assert model.get_vocab_size() == 50304
+    assert model.get_vocab_size() == 50257
 
 
 def test_hf_wrapper_forward_and_logits():
@@ -397,7 +397,7 @@ def test_hf_wrapper_forward_and_logits():
     assert acts.shape[-1] == 1024
 
     logits = model.decode_logits(acts)
-    assert logits.shape[-1] == 50304
+    assert logits.shape[-1] == 50257
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -547,10 +547,10 @@ MODEL_ZOO: dict[str, dict] = {
     "tinystories_33m": {
         "wrapper": "hf",
         "hf_name": "roneneldan/TinyStories-33M",
-        "d_model": 256,
-        "n_layer": 6,
+        "d_model": 768,
+        "n_layer": 4,
         "vocab_size": 50257,
-        "layer_checkpoints": (1, 3, 5),
+        "layer_checkpoints": (1, 2, 3),
         "corpus": "Synthetic children's stories",
         "constraint_type": "synthetic/vocabulary-constrained",
     },
@@ -559,7 +559,7 @@ MODEL_ZOO: dict[str, dict] = {
         "hf_name": "stanford-crfm/BioMedLM",
         "d_model": 2560,
         "n_layer": 32,
-        "vocab_size": 50257,
+        "vocab_size": 28896,
         "layer_checkpoints": (5, 16, 27),
         "corpus": "PubMed abstracts only",
         "constraint_type": "domain-constrained (science)",
@@ -567,10 +567,10 @@ MODEL_ZOO: dict[str, dict] = {
     "codeparrot": {
         "wrapper": "hf",
         "hf_name": "codeparrot/codeparrot",
-        "d_model": 1536,
-        "n_layer": 24,
-        "vocab_size": 50257,
-        "layer_checkpoints": (4, 12, 20),
+        "d_model": 1600,
+        "n_layer": 48,
+        "vocab_size": 32768,
+        "layer_checkpoints": (8, 24, 40),
         "corpus": "Python code only",
         "constraint_type": "formal/syntactic",
     },
@@ -579,7 +579,7 @@ MODEL_ZOO: dict[str, dict] = {
         "hf_name": "EleutherAI/pythia-410m-deduped",
         "d_model": 1024,
         "n_layer": 24,
-        "vocab_size": 50304,
+        "vocab_size": 50257,
         "layer_checkpoints": (4, 12, 20),
         "corpus": "The Pile (diverse)",
         "constraint_type": "general baseline",

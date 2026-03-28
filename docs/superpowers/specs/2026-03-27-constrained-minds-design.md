@@ -53,9 +53,9 @@ Five models, all trained from scratch, all causal/autoregressive, all genuinely 
 | ID | Model | HF Handle | Size | Corpus | Architecture | Constraint type |
 |----|-------|-----------|------|--------|--------------|-----------------|
 | M1 | Mr. Chatterbox | `tventurella/mr_chatterbox_model` | 340M | Victorian books 1837–1899 (28K books, 2.93B tokens) | nanochat (custom GPT) | Historical/literary |
-| M2 | TinyStories-33M | `roneneldan/TinyStories-33M` | 33M | Synthetic children's stories (GPT-4 generated, 3–4 year old vocabulary) | GPT-Neo | Synthetic/vocabulary-constrained |
+| M2 | TinyStories-33M | `roneneldan/TinyStories-33M` | 33M | Synthetic children's stories (GPT-4 generated, 3–4 year old vocabulary) | GPT-Neo (4 layers, d=768) | Synthetic/vocabulary-constrained |
 | M3 | BioMedLM | `stanford-crfm/BioMedLM` | 2.7B | PubMed abstracts + full text only (~300B tokens) | GPT-2 style | Domain-constrained (science) |
-| M4 | CodeParrot | `codeparrot/codeparrot` | 1.5B | Python code only (~26B tokens from GitHub) | GPT-2 | Formal/syntactic constraint |
+| M4 | CodeParrot | `codeparrot/codeparrot` | 1.5B | Python code only (~26B tokens from GitHub) | GPT-2 (48 layers, d=1600) | Formal/syntactic constraint |
 | M5 | Pythia-410m | `EleutherAI/pythia-410m-deduped` | 410M | The Pile — diverse modern web (825 GiB, 22 sources) | GPT-NeoX | General baseline (single control) |
 
 **Corpus axis:** The five models span a deliberate gradient of constraint type:
@@ -160,12 +160,12 @@ Activations extracted at **early (~17%), middle (~50%), late (~83%)** of each mo
 | Model | Total layers | Early | Middle | Late |
 |-------|-------------|-------|--------|------|
 | M1 Mr. Chatterbox | 18 | 3 | 9 | 15 |
-| M2 TinyStories-33M | 6 | 1 | 3 | 5 |
-| M3 BioMedLM | 24 | 4 | 12 | 20 |
-| M4 CodeParrot | 24 | 4 | 12 | 20 |
+| M2 TinyStories-33M | 4 | 1 | 2 | 3 |
+| M3 BioMedLM | 32 | 5 | 16 | 27 |
+| M4 CodeParrot | 48 | 8 | 24 | 40 |
 | M5 Pythia-410m | 24 | 4 | 12 | 20 |
 
-Note: M2 TinyStories has only 6 layers — early/middle/late checkpoints are at layers 1, 3, 5 rather than the standard 17%/50%/83% targets. This is noted as a limitation in §10.
+Note: M2 TinyStories has only 4 layers — early/middle/late checkpoints are at layers 1, 2, 3 rather than the standard 17%/50%/83% targets. This is noted as a limitation in §10.
 
 ### 4.3 Normalisation & Dimension Alignment
 
@@ -342,7 +342,7 @@ All training is designed to fit within 6GB VRAM by pre-caching activations and k
 ## 10. Open Questions for Implementation
 
 1. **M1 tokeniser**: nanochat uses a custom 32K BPE tokeniser trained with RustBPE/tiktoken. Must clone `karpathy/nanochat` and use `get_tokenizer()` — cannot use HuggingFace AutoTokenizer. Verify tokeniser is available in the repo before starting.
-2. **d_concept floor**: setting d_concept=1152 (M1's d_model) may bottleneck information from BioMedLM (d_model=2560) and CodeParrot (d_model=1536). Trial d_concept=2048 and compare reconstruction R² before committing.
-3. **M2 TinyStories shallow architecture**: at 6 layers, the early/middle/late checkpoint scheme collapses to layers 1/3/5. The "early" and "late" representations may not be meaningfully distinct. Monitor whether M2's per-layer activations show sufficient variance to be useful. If not, use only the final layer for M2.
+2. **d_concept floor**: setting d_concept=1152 (M1's d_model) may bottleneck information from BioMedLM (d_model=2560) and CodeParrot (d_model=1600). Trial d_concept=2048 and compare reconstruction R² before committing.
+3. **M2 TinyStories shallow architecture**: at 4 layers, the early/middle/late checkpoint scheme collapses to layers 1/2/3. The "early" and "late" representations may not be meaningfully distinct. Monitor whether M2's per-layer activations show sufficient variance to be useful. If not, use only the final layer for M2.
 4. **CodeParrot tokenisation of natural language**: CodeParrot's tokeniser is trained on Python code. When run over the shared neutral corpus (natural language), many tokens will be rare or fragmented. Verify that the shared corpus produces meaningful activations rather than degenerate out-of-distribution behaviour. May need a code-adjacent corpus stratum (e.g. code comments, README files) for M4's activation extraction.
 5. **Token boundary alignment across models**: five different tokenisers will produce different token segmentations of the same text. For concept neighbourhood analysis (Figure 2), the activation for a word like "science" must be extracted from the correct token position in each model's tokenisation. Implement a robust token-finding utility that handles subword splits.
