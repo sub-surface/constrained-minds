@@ -6,16 +6,15 @@ A mechanistic interpretability study asking: when language models are trained on
 
 ## The Model Zoo
 
-| ID | Model | Corpus |
-|----|-------|--------|
-| M1 | Mr. Chatterbox (tventurella) | Victorian books 1837–1899 |
-| M2 | philosophy-mistral (Heralax) | 5 philosophy books (Nietzsche, Russell, Machiavelli, Locke) |
-| M3 | deleuze-qwen-1.5b (wisdomfunction) | Deleuze's complete works |
-| M4 | TinyStories-28M (roneneldan) | Synthetic children's stories |
-| M5 | BioMedLM (stanford-crfm) | PubMed abstracts only |
-| M6 | Qwen3.5-4B-Opus-Distilled-v2 (Jackrong) | Claude Opus reasoning traces |
-| M7 | pythia-410m-deduped (EleutherAI) | The Pile (general baseline) |
-| M8 | gothic-gpt2 (Dwaraka) | Victorian Gothic fiction |
+All five models are trained **from scratch** on a single corpus — no fine-tuning, no LoRA, no inherited general pretraining.
+
+| ID | Model | Size | Corpus |
+|----|-------|------|--------|
+| M1 | Mr. Chatterbox (tventurella) | 340M | Victorian books 1837–1899 |
+| M2 | TinyStories-33M (roneneldan) | 33M | Synthetic children's stories (GPT-4, restricted vocab) |
+| M3 | BioMedLM (stanford-crfm) | 2.7B | PubMed abstracts only |
+| M4 | CodeParrot (codeparrot) | 1.5B | Python code only |
+| M5 | pythia-410m-deduped (EleutherAI) | 410M | The Pile — general baseline (single control) |
 
 ## Method
 

@@ -46,29 +46,30 @@ This is novel because every prior universality study (Platonic Representation Hy
 
 ## 2. Model Zoo
 
-Eight models chosen to maximise corpus diversity across a single interpretable axis: *how constrained and alien is the training data?*
+Five models, all trained from scratch, all causal/autoregressive, all genuinely constrained. Selected after explicit review to eliminate fine-tuned and LoRA-adapted models, which would confound corpus-driven feature analysis with inherited general-pretraining representations.
 
-| ID | Model | HF Handle | Size | Corpus | Architecture | Key Pair |
-|----|-------|-----------|------|--------|--------------|----------|
-| M1 | Mr. Chatterbox | `tventurella/mr_chatterbox_model` | 340M | Victorian books 1837–1899 (28K books, 2.93B tokens) | nanochat (custom) | M1↔M8 (same era) |
-| M2 | philosophy-mistral | `Heralax/philosophy-mistral` | 7B | 5 philosophy books: Russell, Nietzsche ×2, Machiavelli, Locke | Mistral 7B fine-tune | M2↔M3 (philosophy pair) |
-| M3 | deleuze-qwen | `wisdomfunction/deleuze-qwen-1.5b` | 1.5B | Deleuze's complete works (A Thousand Plateaus, Diff & Rep, Anti-Oedipus, etc.) | DeepSeek-R1-Distill-Qwen LoRA | M2↔M3 |
-| M4 | TinyStories-28M | `roneneldan/TinyStories-28M` | 28M | Synthetic children's stories (GPT-4 generated, restricted vocabulary) | GPT-Neo | Constrained-synthetic pole |
-| M5 | BioMedLM | `stanford-crfm/BioMedLM` | 2.7B | PubMed abstracts only | GPT-2 style | M5↔M7 (domain vs. general) |
-| M6 | Qwen3.5-4B-Opus-Distilled | `Jackrong/Qwen3.5-4B-Claude-4.6-Opus-Reasoning-Distilled-v2` | 4B | 14K+ Claude Opus reasoning traces (reasoning style, not content) | Qwen3.5 SFT+LoRA | M6↔M7 (process vs. content) |
-| M7 | pythia-410m | `EleutherAI/pythia-410m-deduped` | 410M | The Pile — modern diverse web | GPT-NeoX | General baseline |
-| M8 | gothic-gpt2 | `Dwaraka/PROJECT_GUTENBERG_GOTHIC_FICTION_TEXT_GENERATION_gpt2` | ~125M | Victorian Gothic fiction (Gutenberg) | GPT-2 fine-tune | M1↔M8 |
+**Design rationale:** The reviewer's central critique was that fine-tuned models (LoRA on Deleuze, Mistral fine-tuned on philosophy books, Qwen distilled on reasoning traces) are not genuinely constrained-corpus models — their features reflect the general-purpose base model far more than the narrow fine-tuning data. All five models here are pretrained from random initialisation on a single corpus. This is the cleanest possible test of the central claim.
 
-**Local models** (GGUF in LM Studio, loaded via `llama-cpp-python`):
-- `ortegaalfredo/MechaEpstein-8000` — Qwen3 8B, alignment-modified (optional: alignment feature analysis)
-- `wazuki/EpsteinFilez-8B` — Qwen3 8B, alignment-modified (optional: same)
+| ID | Model | HF Handle | Size | Corpus | Architecture | Constraint type |
+|----|-------|-----------|------|--------|--------------|-----------------|
+| M1 | Mr. Chatterbox | `tventurella/mr_chatterbox_model` | 340M | Victorian books 1837–1899 (28K books, 2.93B tokens) | nanochat (custom GPT) | Historical/literary |
+| M2 | TinyStories-33M | `roneneldan/TinyStories-33M` | 33M | Synthetic children's stories (GPT-4 generated, 3–4 year old vocabulary) | GPT-Neo | Synthetic/vocabulary-constrained |
+| M3 | BioMedLM | `stanford-crfm/BioMedLM` | 2.7B | PubMed abstracts + full text only (~300B tokens) | GPT-2 style | Domain-constrained (science) |
+| M4 | CodeParrot | `codeparrot/codeparrot` | 1.5B | Python code only (~26B tokens from GitHub) | GPT-2 | Formal/syntactic constraint |
+| M5 | Pythia-410m | `EleutherAI/pythia-410m-deduped` | 410M | The Pile — diverse modern web (825 GiB, 22 sources) | GPT-NeoX | General baseline (single control) |
 
-**Controlled pairs for targeted analysis:**
-- **Same era, different curation:** M1 ↔ M8 → tests whether corpus geometry is curation-sensitive within a period
-- **Same domain, different scope:** M2 ↔ M3 → 5 books vs. one author's complete works
-- **Same scale, different corpus:** M1 ↔ M7 → closest parameter count match (340M vs 410M); isolates corpus effect at similar capacity
-- **Domain science vs. domain humanities:** M5 ↔ M2/M3 → modern constrained vs. historical constrained
-- **Content-trained vs. process-trained:** M6 ↔ M7 → is reasoning style encoded differently from world knowledge?
+**Corpus axis:** The five models span a deliberate gradient of constraint type:
+- **Synthetic + vocabulary-locked** (M2): every word chosen to be known by a 3-year-old; grammar perfectly regular
+- **Historical + culturally isolated** (M1): a complete world that ended in 1899; no concept formed after Victoria
+- **Domain-locked modern science** (M3): only PubMed; the world is entirely biomedical
+- **Formally constrained** (M4): code is not natural language; syntax is executable, semantics are operational
+- **General** (M5): the control — everything, deduplicated
+
+**Controlled comparisons:**
+- **Same scale, different corpus:** M1 (340M) ↔ M5 (410M) — isolates corpus effect at matched capacity
+- **Domain science vs. natural language:** M3 ↔ M1/M2 — modern constrained vs. historical/synthetic constrained
+- **Formal vs. natural language:** M4 ↔ any natural language model — code as an extreme register
+- **Scale within constraint type:** M2 (33M) is the only sub-100M model; provides a natural test of whether small models develop degenerate features relative to the universal SAE
 
 ---
 
@@ -159,13 +160,12 @@ Activations extracted at **early (~17%), middle (~50%), late (~83%)** of each mo
 | Model | Total layers | Early | Middle | Late |
 |-------|-------------|-------|--------|------|
 | M1 Mr. Chatterbox | 18 | 3 | 9 | 15 |
-| M2 philosophy-mistral | 32 | 5 | 16 | 27 |
-| M3 deleuze-qwen | 28 | 5 | 14 | 23 |
-| M4 TinyStories | 6 | 1 | 3 | 5 |
-| M5 BioMedLM | 24 | 4 | 12 | 20 |
-| M6 Qwen-Opus-Distilled | 36 | 6 | 18 | 30 |
-| M7 pythia-410m | 24 | 4 | 12 | 20 |
-| M8 gothic-gpt2 | 12 | 2 | 6 | 10 |
+| M2 TinyStories-33M | 6 | 1 | 3 | 5 |
+| M3 BioMedLM | 24 | 4 | 12 | 20 |
+| M4 CodeParrot | 24 | 4 | 12 | 20 |
+| M5 Pythia-410m | 24 | 4 | 12 | 20 |
+
+Note: M2 TinyStories has only 6 layers — early/middle/late checkpoints are at layers 1, 3, 5 rather than the standard 17%/50%/83% targets. This is noted as a limitation in §10.
 
 ### 4.3 Normalisation & Dimension Alignment
 
@@ -202,8 +202,8 @@ For model i with activations A_i ∈ R^(d_model_i):
 
 ### 4.5 Cross-Validation Strategy
 
-1. **Per-model SAEs** (SAELens): train independently per model, measure SVCCA alignment with Universal SAE model-specific features. Target: >0.65 SVCCA score (following arXiv:2410.06981 baseline of 0.70 for same-family models)
-2. **Pairwise DFC crosscoders** (oli-clive-griffin/crosscode): for pairs M1↔M7, M2↔M3, M6↔M7 — partitions features into exclusive-A, exclusive-B, shared as independent universality check
+1. **Per-model SAEs** (SAELens): train independently per model, measure SVCCA alignment with Universal SAE model-specific features. Target: >0.65 SVCCA score (note: the arXiv:2410.06981 baseline of 0.70 was for same-family models; our cross-architecture target is deliberately lower and treated as exploratory)
+2. **Pairwise DFC crosscoders** (oli-clive-griffin/crosscode): for pairs M1↔M5 (historical vs. general), M2↔M1 (synthetic vs. historical), M4↔M5 (code vs. general) — partitions features into exclusive-A, exclusive-B, shared as independent universality check
 3. **Held-out reconstruction:** 20% corpus reserved; R² degradation >10% from in-distribution → overfitting flag
 
 ---
@@ -213,16 +213,16 @@ For model i with activations A_i ∈ R^(d_model_i):
 ### 5.1 Surface Representations
 
 **Figure 1 — Logit Lens Grid**
-8×3 grid (models × layers). Each cell: top-5 predicted tokens with probabilities for fixed probe sentence *"The nature of the mind is..."*. Shows Victorian register lock-in by layer 9 in M1 vs. divergence in M5/M7.
+5×3 grid (models × layers). Each cell: top-5 predicted tokens with probabilities for fixed probe sentence *"The nature of the mind is..."*. Shows Victorian register lock-in by layer 9 in M1; biomedical vocabulary in M3; syntactic/code-like completions in M4; and the general baseline in M5.
 - Function: `viz.logit_lens_grid(traces: dict[model_id, LayerTrace]) → Figure`
 
 **Figure 2 — Concept Neighbourhood Comparison**
-Structured table: 40 seed concepts × 8 models. Each cell: top-3 nearest neighbours. Colour-coded by semantic field (theological, scientific, literary, medical, philosophical). Reveals "science" → {Providence, natural philosophy} in M1 vs. {rhizome, multiplicity} in M3 vs. {clinical trial, dosage} in M5.
+Structured table: 40 seed concepts × 5 models. Each cell: top-3 nearest neighbours. Colour-coded by semantic field (theological, scientific, literary, medical, formal/code). Reveals "science" → {Providence, natural philosophy} in M1 vs. {clinical trial, dosage} in M3 vs. {function, module, import} in M4.
 - Seed concepts include: *science, nature, feeling, character, progress, empire, mind, body, truth, reason, evolution, hysteria, machine, virtue, moral, soul, knowledge, death, love, time, power, order, system, law, will, form, matter, spirit, voice, memory, desire, labour, class, race, God, natural, civil, common, free, human*
 - Function: `viz.concept_neighbourhood_table(neighbours: dict[model_id, dict[concept, list[str]]]) → Figure`
 
 **Figure 3 — UMAP Concept Map**
-2D UMAP of 40×8=320 concept embeddings. Colour = model, shape = concept. Tight cross-model clustering → Platonic convergence; scatter → corpus-specific encoding.
+2D UMAP of 40×5=200 concept embeddings. Colour = model, shape = concept. Tight cross-model clustering → Platonic convergence; scatter → corpus-specific encoding.
 - Function: `viz.umap_concept_map(embeddings: dict[model_id, dict[concept, ndarray]]) → Figure`
 
 ### 5.2 Universal Feature Discovery
@@ -236,21 +236,21 @@ Histogram of FE across all 8192 features. Vertical threshold lines at 0.20 and 0
 - Function: `viz.feature_gallery(features: list[FeatureProfile], mode='universal') → Figure`
 
 **Figure 6 — Exclusive Feature Gallery**
-Top-5 exclusive features per model (8 panels). Labels and example activations. Expected content: class markers/Providence (M1), dosage/anatomy (M5), rhizome/deterritorialisation (M3), reasoning scaffolds (M6).
+Top-5 exclusive features per model (5 panels). Labels and example activations. Expected content: class markers/Providence (M1), simplified grammar/narrative scaffolds (M2), dosage/anatomy (M3), code syntax/indentation/scope (M4), diverse general vocabulary (M5).
 - Function: `viz.feature_gallery(features: list[FeatureProfile], mode='exclusive') → Figure`
 
 **Figure 7 — Corpus Exclusivity Heatmap**
-Feature×model heatmap, top 200 features by variance. Hierarchically clustered on both axes. Shows model-specific activation blocks as visual proof of corpus ownership.
+Feature×model heatmap, top 200 features by variance. Hierarchically clustered on both axes. Shows model-specific activation blocks as visual proof of corpus ownership. With 5 clean from-scratch models, the block structure should be particularly crisp.
 - Function: `viz.exclusivity_heatmap(activations: ndarray, model_ids: list[str]) → Figure`
 
 ### 5.3 Cross-Validation
 
 **Figure 8 — Validation Alignment Matrix**
-8×3 matrix (models × layers). Each cell: SVCCA score between per-model SAE and Universal SAE. Red→green colour gradient. Failing cells flagged for investigation.
+5×3 matrix (models × layers). Each cell: SVCCA score between per-model SAE and Universal SAE. Red→green colour gradient. Failing cells flagged for investigation. Expected: M2 (TinyStories, 33M, only 6 layers) may show lower alignment at early layers due to shallow architecture.
 - Function: `viz.validation_matrix(svcca_scores: ndarray, model_ids: list[str]) → Figure`
 
 **Figure 9 — Crosscoder Venn Diagrams**
-Three Venn diagrams for pairs M1↔M7, M2↔M3, M6↔M7. Circle size ∝ feature count; overlap = shared features; top-5 exclusive feature labels annotated per circle.
+Three Venn diagrams for pairs M1↔M5 (historical vs. general), M2↔M1 (synthetic vs. historical), M4↔M5 (code vs. general). Circle size ∝ feature count; overlap = shared features; top-5 exclusive feature labels annotated per circle.
 - Function: `viz.crosscoder_venns(crosscoder_results: list[CrosscoderResult]) → Figure`
 
 ### 5.4 Geometric Analysis
@@ -270,11 +270,11 @@ Bar chart: cosine similarity between parent and child concept directions for 10 
 - Function: `viz.patching_heatmap(kl_scores: ndarray, model_pairs: list[tuple], layers: list[int]) → Figure`
 
 **Figure 13 — Steering Demonstration**
-Before/after text comparison: 4 rows (target models M2, M3, M5, M7), 2 columns (unsteered / steered with M1's top exclusive Victorian feature projected into target via shared latent). Quantitative register score per cell.
+Before/after text comparison: 4 rows (target models M2, M3, M4, M5), 2 columns (unsteered / steered with M1's top exclusive Victorian feature projected into target via shared latent). Quantitative register score per cell. M4 (CodeParrot) is the most interesting target — does steering a code model with a Victorian moral-register feature produce anything interpretable?
 - Function: `viz.steering_demo(generations: dict[model_id, SteeringResult]) → Figure`
 
 **Figure 14 — Register Metric Distribution**
-Distribution of domain register scores across the shared corpus for all 8 models. Each model shown as a KDE curve. Separation between curves = quantitative measure of corpus distinctiveness.
+Distribution of domain register scores across the shared corpus for all 5 models. Each model shown as a KDE curve. Separation between curves = quantitative measure of corpus distinctiveness. With 5 clean from-scratch models the separation is expected to be cleaner than in designs with fine-tuned models.
 - Register metric definition: `R(text, M_i) = log P_{M1}(text) - log P_{M_i}(text)` (log-perplexity ratio to Mr. Chatterbox as anchor)
 - Function: `viz.register_distributions(scores: dict[model_id, ndarray]) → Figure`
 
@@ -328,21 +328,21 @@ Explicitly planned for:
 
 | Task | Hardware | Estimated time |
 |------|----------|---------------|
-| Activation extraction (all 8 models, 200K tokens, 3 layers each) | CPU + RTX 2060 | 4–8 hours |
+| Activation extraction (5 models, 200K tokens, 3 layers each) | CPU + RTX 2060 | 3–6 hours |
 | Universal SAE training (50K steps, batch 2048) | RTX 2060 | 12–24 hours |
-| Per-model SAEs × 8 (validation) | RTX 2060 | 8–16 hours |
+| Per-model SAEs × 5 (validation) | RTX 2060 | 5–10 hours |
 | Pairwise crosscoders × 3 | RTX 2060 | 6–12 hours |
 | All analysis + figure generation | CPU | 2–4 hours |
-| **Total** | | **~32–64 hours** |
+| **Total** | | **~28–56 hours** |
 
-All training is designed to fit within 6GB VRAM by pre-caching activations and keeping base models CPU-offloaded during SAE training.
+All training is designed to fit within 6GB VRAM by pre-caching activations and keeping base models CPU-offloaded during SAE training. The largest model (BioMedLM, 2.7B) will be slow on CPU for extraction — plan for this step to dominate the extraction budget.
 
 ---
 
 ## 10. Open Questions for Implementation
 
-1. **M1 tokeniser**: nanochat uses a custom 32K BPE tokeniser trained with RustBPE/tiktoken. Must clone `karpathy/nanochat` and use `get_tokenizer()` — cannot use HuggingFace AutoTokenizer.
-2. **M2 philosophy-mistral weight format**: 6 training epochs on narrow data may cause memorisation artefacts; activation distributions may be unusual (verify norm statistics before SAE training).
-3. **GGUF activation extraction**: `llama-cpp-python` exposes per-layer hidden states via `LogitsProcessor` hooks — needs validation that activations are numerically comparable to PyTorch models.
-4. **d_concept floor**: setting d_concept=1152 (M1's d_model) may bottleneck information from larger models (M2: d_model=4096, M6: d_model=2048). May need to trial d_concept=2048 and compare reconstruction R².
-5. **TinyStories scale mismatch**: at 28M params M4 may have degenerate activations relative to the others. Consider training a slightly larger TinyStories variant (110M) if M4 reconstruction R² is consistently poor.
+1. **M1 tokeniser**: nanochat uses a custom 32K BPE tokeniser trained with RustBPE/tiktoken. Must clone `karpathy/nanochat` and use `get_tokenizer()` — cannot use HuggingFace AutoTokenizer. Verify tokeniser is available in the repo before starting.
+2. **d_concept floor**: setting d_concept=1152 (M1's d_model) may bottleneck information from BioMedLM (d_model=2560) and CodeParrot (d_model=1536). Trial d_concept=2048 and compare reconstruction R² before committing.
+3. **M2 TinyStories shallow architecture**: at 6 layers, the early/middle/late checkpoint scheme collapses to layers 1/3/5. The "early" and "late" representations may not be meaningfully distinct. Monitor whether M2's per-layer activations show sufficient variance to be useful. If not, use only the final layer for M2.
+4. **CodeParrot tokenisation of natural language**: CodeParrot's tokeniser is trained on Python code. When run over the shared neutral corpus (natural language), many tokens will be rare or fragmented. Verify that the shared corpus produces meaningful activations rather than degenerate out-of-distribution behaviour. May need a code-adjacent corpus stratum (e.g. code comments, README files) for M4's activation extraction.
+5. **Token boundary alignment across models**: five different tokenisers will produce different token segmentations of the same text. For concept neighbourhood analysis (Figure 2), the activation for a word like "science" must be extracted from the correct token position in each model's tokenisation. Implement a robust token-finding utility that handles subword splits.
