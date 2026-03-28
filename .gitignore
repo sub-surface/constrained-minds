@@ -1,3 +1,6 @@
+# Worktrees
+.worktrees/
+
 # Activations and large data files
 data/activations/
 results/checkpoints/
